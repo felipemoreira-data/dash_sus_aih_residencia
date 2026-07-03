@@ -16,20 +16,18 @@ from db_connect import (
     LABELS_CIRURGICAS_VL,
 )
 
-# ===========================================================================
 # GEOJSON LOCAL - CARREGAMENTO ÚNICO
-# =======================================================================
+
 with open('municipios_br.json', encoding='utf-8') as f: 
     GEOJSON_ESTADO = json.load(f)
     
 for feature in GEOJSON_ESTADO['features']:
     cod = str(feature['properties']['codarea'])
     feature['properties']['codarea_6'] = cod[:6] # Remove dígito verificador
-# =======================================================================
 
-# ===========================================================================
+
 # Inicialização do App
-# ===========================================================================
+
 
 app = dash.Dash(
     __name__,
@@ -38,9 +36,9 @@ app = dash.Dash(
     title="BI — Produção Hospitalar SIH/SUS",
 )
 
-# ===========================================================================
+
 # Pré-carregamento das opções de filtro
-# ===========================================================================
+
 
 try:
     opcoes = obter_opcoes_filtros()
@@ -48,9 +46,8 @@ except Exception as e:
     print(f"[AVISO] Falha ao carregar opções de filtro: {e}")
     opcoes = {"anos": [], "meses": [], "municipios": []}
 
-# ===========================================================================
-# Paleta de cores alinhada ao tema FLATLY
-# ===========================================================================
+
+# Paleta de cores do tema FLATLY
 
 COR_PRIMARIA  = "#2C3E50"   # azul-escuro FLATLY
 COR_SECUNDARIA = "#18BC9C"  # verde-teal FLATLY
@@ -60,9 +57,7 @@ COR_INFO      = "#3498DB"   # azul claro
 COR_CINZA     = "#95A5A6"
 SEQUENCIA_BLOCOS = [COR_SECUNDARIA, COR_INFO, COR_AVISO, COR_PERIGO]
 
-# ===========================================================================
 # Componentes Reutilizáveis
-# ===========================================================================
 
 def cartao_kpi(titulo: str, valor_id: str, cor: str = COR_PRIMARIA) -> dbc.Card:
     """Retorna um card de KPI com título e valor dinâmico."""
@@ -84,9 +79,7 @@ def spinner(children) -> dcc.Loading:
     return dcc.Loading(type="circle", color=COR_SECUNDARIA, children=children)
 
 
-# ===========================================================================
 # Sidebar de Filtros
-# ===========================================================================
 
 sidebar = html.Div(
     [
@@ -158,11 +151,10 @@ sidebar = html.Div(
     },
 )
 
-# ===========================================================================
 # Abas
-# ===========================================================================
 
-# --- ABA 1: EFICIÊNCIA ORÇAMENTÁRIA ----------------------------------------
+
+# ABA 1: EFICIÊNCIA ORÇAMENTÁRIA ----------------------------------------
 aba_orcamento = dbc.Container([
     # KPIs
     dbc.Row([
@@ -192,7 +184,7 @@ aba_orcamento = dbc.Container([
 ], fluid=True, className="py-3")
 
 
-# --- ABA 2: PRESSÃO ASSISTENCIAL -------------------------------------------
+# ABA 2: PRESSÃO ASSISTENCIAL -------------------------------------------
 aba_pressao = dbc.Container([
     # KPIs
     dbc.Row([
@@ -221,7 +213,7 @@ aba_pressao = dbc.Container([
 ], fluid=True, className="py-3")
 
 
-# --- ABA 3: PRODUTIVIDADE CIRÚRGICA -----------------------------
+# ABA 3: PRODUTIVIDADE CIRÚRGICA -----------------------------
 aba_cirurgias = dbc.Container([
     # KPIs
     dbc.Row([
@@ -250,7 +242,7 @@ aba_cirurgias = dbc.Container([
 ], fluid=True, className="py-3")
 
 
-# --- ABA 4: VISÃO TERRITORIAL ---
+# ABA 4: VISÃO TERRITORIAL ---
 aba_territorial = dbc.Container([
     dbc.Row([
         # Painel de controle do mapa
@@ -295,9 +287,7 @@ aba_territorial = dbc.Container([
 ], fluid=True, className="py-3")
 
 
-# ======================
 # Layout Principal
-# ======================
 
 TOPBAR_STYLE = {
     "backgroundColor": COR_PRIMARIA,
@@ -356,9 +346,7 @@ app.layout = dbc.Container([
 ], fluid=True, style={"backgroundColor": "#F4F6F7", "minHeight": "100vh", "padding": 0})
 
 
-# ==================
 # CSS inline para as abas
-# ===================
 
 app.index_string = """<!DOCTYPE html>
 <html>
@@ -399,9 +387,7 @@ app.index_string = """<!DOCTYPE html>
 </html>"""
 
 
-# ========
 # Utilitários de formatação
-# ================
 
 def fmt_brl(valor: float) -> str:
     """Formata um número como moeda brasileira."""
@@ -413,9 +399,7 @@ def fmt_int(valor: float) -> str:
     return f"{int(valor):,}".replace(",", ".")
 
 
-# =======================
 # Callback: Roteamento das Abas
-# =======================
 
 @app.callback(
     Output("conteudo-aba", "children"),
@@ -431,9 +415,7 @@ def renderizar_aba(aba):
     return mapa.get(aba, aba_orcamento)
 
 
-# =======================
 # Callback: Limpar Filtros
-# =====================
 
 @app.callback(
     Output("filtro-ano",       "value"),
@@ -446,9 +428,7 @@ def limpar_filtros(_):
     return None, None, None
 
 
-# ====================
 # Callback: ABA 1 — Eficiência Orçamentária
-# ====================
 
 @app.callback(
     Output("kpi-vl-total",           "children"),
@@ -539,9 +519,7 @@ def atualizar_orcamento(ano, mes, municipio):
     )
 
 
-# ===============
 # Callback: ABA 2 — Pressão Assistencial
-# ==============
 
 @app.callback(
     Output("kpi-qtd-03",          "children"),
@@ -568,7 +546,7 @@ def atualizar_pressao(ano, mes, municipio):
     qtd_0304 = df["qtd_0304"].sum()
     qtd_0305 = df["qtd_0305"].sum()
 
-    # --- Scatter Plot: Pressão por Município ---
+    # Scatter Plot: Pressão por Município ---
     df_mun = df.groupby("nome_municipio", as_index=False).agg({
         "qtd_0303":  "sum",
         "qtd_0304":  "sum",
@@ -577,11 +555,11 @@ def atualizar_pressao(ano, mes, municipio):
     })
     df_mun["complexidade"] = df_mun["qtd_0304"] + df_mun["qtd_0305"]
 
-    # #2: Plotly lança ValueError se size tiver valores 0 ou negativos.
+    # Plotly lança ValueError se size tiver valores 0 ou negativos.
     # clip(lower=1) garante que todas as bolhas fiquem visíveis.
     df_mun["qtd_total_plot"] = df_mun["qtd_total"].clip(lower=1)
 
-    # #4: Limita a 100 municípios de maior volume para não travar o browser
+    # Limita a 100 municípios de maior volume para não travar o browser
     # com 5000+ pontos quando nenhum filtro está ativo.
     df_mun_plot = df_mun.nlargest(100, "qtd_total")
 
@@ -605,7 +583,7 @@ def atualizar_pressao(ano, mes, municipio):
         coloraxis_showscale=False,
     )
 
-    # --- Área: Evolução Temporal Oncológica ---
+    # Área: Evolução Temporal Oncológica ---
     # #3: sort_values garante ordenação cronológica correta após o groupby.
     df_temp = (
         df.groupby("periodo", as_index=False)
@@ -630,9 +608,7 @@ def atualizar_pressao(ano, mes, municipio):
     )
 
 
-# ==========
 # Callback: ABA 3 — Produtividade Cirúrgica
-# ==========
 
 @app.callback(
     Output("kpi-qtd-04",            "children"),
@@ -709,11 +685,7 @@ def atualizar_cirurgias(ano, mes, municipio):
         fig_donut,
     )
 
-
-# ===========
 # Callback: ABA 4 — Visão Territorial (Mapa Coroplético)
-# ===========
-
 
 @app.callback(
     Output("mapa-coropletico-sus", "figure"),
@@ -775,9 +747,7 @@ def atualizar_mapa(variavel, ano, mes, municipio):
     return fig, titulo
 
 
-# ============
 # Entry Point
-# ============
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=8050)
