@@ -1,15 +1,3 @@
-"""
-db_connect.py
-=============
-Módulo de acesso a dados para o Dashboard SIH/SUS.
-Responsabilidade: conexão com o banco de dados PostgreSQL e funções de
-busca/agregação analítica por meio de queries SQL otimizadas.
-
-Todas as funções aceitam filtros opcionais (ano_aih, mes_aih, nome_municipio).
-Quando um filtro for None ou string vazia, ele é ignorado e a query retorna
-o consolidado completo.
-"""
-
 import os
 import pandas as pd
 from sqlalchemy import create_engine, text
@@ -17,9 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# -------------
 # Mapeamento de rótulos amigáveis para as sub-variáveis cirúrgicas (Bloco 04)
-# -------------
 LABELS_CIRURGICAS = {
     "qtd_0401": "Pequenas Cirurgias / Pele",
     "qtd_0402": "Glândulas Endócrinas",
@@ -58,11 +44,6 @@ LABELS_CIRURGICAS_VL = {
     "vl_0416": "Oncologia Cirúrgica",
 }
 
-
-# ---------------------
-# Conexão
-# --------------------
-
 def obter_conexao():
     """
     Cria e retorna o motor SQLAlchemy conectado ao banco PostgreSQL.
@@ -86,9 +67,7 @@ def obter_conexao():
     return create_engine(url)
 
 
-# --------------
-# Utilitário interno: construção dinâmica da cláusula WHERE
-# -------------
+
 
 def _build_where(params: dict) -> tuple[str, dict]:
     """
@@ -105,17 +84,8 @@ def _build_where(params: dict) -> tuple[str, dict]:
     return where, bindings
 
 
-# ------------------
-# 1. Opções para os Dropdowns da Sidebar
-# ------------------
 def obter_opcoes_filtros() -> dict:
-    """
-    Retorna um dicionário com as listas únicas e ordenadas de:
-        - anos    : lista de anos disponíveis (ano_aih)
-        - meses   : lista de meses disponíveis (mes_aih)
-        - municipios: lista de municípios disponíveis (nome_municipio)
-    Usado para alimentar os Dropdowns da Sidebar.
-    """
+ 
     engine = obter_conexao()
     query = text("""
         SELECT
@@ -133,9 +103,9 @@ def obter_opcoes_filtros() -> dict:
     }
 
 
-# --------------
-# 2. Dados para a Aba 1 — Eficiência Orçamentária
-# -------------
+
+#Dados para a Aba 1 — Eficiência Orçamentária
+
 
 def obter_dados_orcamento(
     ano_aih: str | None = None,
@@ -189,13 +159,10 @@ def obter_dados_orcamento(
     return df
 
 
-# ==================
-# 3. Dados para a Aba 2 — Pressão Assistencial
-# ==================
 
-# =====================
-# 3. Dados para a Aba 2 — Pressão Assistencial
-# =====================
+
+#Dados para a Aba 2 — Pressão Assistencial
+
 
 def obter_dados_pressao(
     ano_aih: str | None = None,
@@ -242,9 +209,9 @@ def obter_dados_pressao(
     return df
 
 
-# ===================
-# 4. Dados para a Aba 3 — Produtividade Cirúrgica
-# ==================
+
+#Dados para a Aba 3 — Produtividade Cirúrgica
+
 
 def obter_dados_cirurgias(
     ano_aih: str | None = None,
@@ -296,9 +263,9 @@ def obter_dados_cirurgias(
     return df
 
 
-# ==================
-# 5. Dados para a Aba 4 — Visão Territorial (Mapa)
-# ==================
+
+#Dados para a Aba 4 — Visão Territorial (Mapa)
+
 
 def obter_dados_mapa(
     ano_aih: str | None = None,
